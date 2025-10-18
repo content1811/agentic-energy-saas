@@ -1,63 +1,97 @@
+
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { StatsCard } from "./stats-card";
+import { StatsCard } from "@/components/stats-card";
+import { UsageChart } from "@/components/usage-chart";
+import { AdviceCards } from "@/components/advice-cards";
 import { Battery, Zap, TrendingDown, Leaf } from "lucide-react";
 
+const TENANT_ID = "123e4567-e89b-12d3-a456-426614174000";
+const SITE_ID = "site-01";
+
+interface Reading {
+  ts: string;
+  kw: number;
+  site_id: string;
+}
+
+interface Advice {
+  id: string;
+  title: string;
+  text: string;
+  savings_est_usd: number;
+  co2_saved_kg: number;
+  type: string;
+}
+
 export function Dashboard() {
-  const { data: health } = useQuery({
-    queryKey: ["health"],
-    queryFn: () => apiClient.get("/health"),
+  const { data: latestReading } = useQuery({
+    queryKey: ["latest-reading", SITE_ID],
+    queryFn: () => apiClient.get<Reading>(
+      `/api/v1/readings/latest?tenant_id=${TENANT_ID}&site_id=${SITE_ID}`
+    ),
+    refetchInterval: 15000,
   });
+
+  const { data: readings } = useQuery({
+    queryKey: ["readings", SITE_ID],
+    queryFn: () => apiClient.get<Reading[]>(
+      `/api/v1/readings/?tenant_id=${TENANT_ID}&site_id=${SITE_ID}&limit=100`
+    ),
+    refetchInterval: 15000,
+  });
+
+  const { data: advice } = useQuery({
+    queryKey: ["advice", SITE_ID],
+    queryFn: () => apiClient.get<Advice[]>(
+      `/api/v1/advice/?tenant_id=${TENANT_ID}&site_id=${SITE_ID}&limit=3`
+    ),
+    refetchInterval: 60000,
+  });
+
+  const currentKw = latestReading?.kw || 0;
+  const avgKw = readings && readings.length > 0
+    ? readings.reduce((sum, r) => sum + r.kw, 0) / readings.length
+    : 0;
+  const dailyCost = currentKw * 24 * 0.12;
+  const totalSavings = advice?.reduce((sum, a) => sum + a.savings_est_usd, 0) || 0;
+  const totalCO2 = advice?.reduce((sum, a) => sum + a.co2_saved_kg, 0) || 0;
 
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Current Usage"
-          value="42.5 kW"
+          value={`${currentKw.toFixed(1)} kW`}
           icon={<Zap className="h-5 w-5" />}
-          trend="+5.2%"
+          trend={currentKw > avgKw ? `+${((currentKw/avgKw - 1) * 100).toFixed(1)}%` : "Normal"}
         />
         <StatsCard
           title="Today's Cost"
-          value="$187.40"
+          value={`$${dailyCost.toFixed(2)}`}
           icon={<Battery className="h-5 w-5" />}
-          trend="-2.1%"
-          trendPositive={true}
+          trend="Est. 24hr"
         />
         <StatsCard
           title="Savings Potential"
-          value="$45.30"
+          value={`$${totalSavings.toFixed(2)}`}
           icon={<TrendingDown className="h-5 w-5" />}
-          trend="Based on AI analysis"
+          trend="Per day"
+          trendPositive={true}
         />
         <StatsCard
-          title="CO₂ Saved"
-          value="23.4 kg"
+          title="CO₂ Impact"
+          value={`${totalCO2.toFixed(1)} kg`}
           icon={<Leaf className="h-5 w-5" />}
-          trend="This month"
+          trend="Potential savings"
         />
       </div>
 
-      <div className="rounded-lg border bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold">System Status</h2>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">API Status</span>
-            <span className="text-sm font-medium text-green-600">
-              {health?.status || "Connecting..."}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Version</span>
-            <span className="text-sm font-medium">
-              {health?.version || "v0.1.0"}
-            </span>
-          </div>
-        </div>
-      </div>
+      <UsageChart readings={readings || []} />
+
+      <AdviceCards advice={advice || []} />
     </div>
   );
 }
