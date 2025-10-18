@@ -1,6 +1,14 @@
-# Agentic Energy SaaS -  Setup Guide
+# Agentic Energy SaaS - Setup Guide
 
 > AI-powered energy monitoring and optimization platform with real-time insights, forecasting, and actionable recommendations.
+
+## 🎥 Video Demo
+
+[![Agentic Energy SaaS Demo](https://img.youtube.com/vi/5Ugsu2MSINI/maxresdefault.jpg)](https://youtu.be/5Ugsu2MSINI)
+
+**Watch the full walkthrough** ↑ *Click to see the platform in action!*
+
+---
 
 ## 🎯 What You'll Build
 
@@ -385,7 +393,7 @@ TO_EMAIL = "admin@demo.com"  # change recipient
 
 ## 🚀 Next Steps (Phase 2+)
 
-After your is running:
+After running:
 
 1. **Multi-tenant Support**
    - Add tenant isolation
@@ -487,7 +495,7 @@ MIT License - see LICENSE file for details
 
 ---
 
-## ✅ Checklist
+## ✅Checklist
 
 Use this to verify your setup:
 
@@ -506,7 +514,7 @@ Use this to verify your setup:
 - [ ] AI recommendations visible
 - [ ] Email received in Mailpit
 
-**All checked?** 🎉 Fully operational!
+**All checked?** 🎉 Your is fully operational!
 
 ---
 
